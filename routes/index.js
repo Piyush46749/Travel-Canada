@@ -313,24 +313,23 @@ router.post("/modes", function(req, res, next){
 })
 
 
+
 router.post("/fetchAll", function(req, res, next){
-  console.log("REACHED!");
+  // console.log("REACHED!");
 
-  Tourism.find({}), function(err, data){
-
+  Tourism.find({}, {"_id":0}, function(err, data){
     if (data){
-
-      console.log("result")
-      return "result"
-    
+      console.log(data)
+      status_code="{code: '200'}"
+      res.send(status_code+",\n"+data)
     }
-
-    if(err){
+    else if (err){
       console.log("Error while fetching the data: "+err)
     }
-  }
-
+    else {
+      console.log("Invalid Request!")
+    }
+  })
 })
-
 
 module.exports = router;
