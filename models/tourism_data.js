@@ -1,12 +1,12 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-touristPlaces = new Schema( {
+provincesSchema = new Schema( {
 	place_id: String,
 	place_name: String,
 	province_id: String,
 	desc: String,
 	}),
-Tourism = mongoose.model('places', touristPlaces);
+Provinces = mongoose.model('provinces', provincesSchema);
 
-module.exports = Tourism;
+module.exports = Provinces;
