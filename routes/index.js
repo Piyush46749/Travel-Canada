@@ -342,7 +342,6 @@ function get_company(mode) {
 router.post("/modes", function(req, res, next) {
   var source = req.body.src;
   var destination = req.body.dest;
-  console.log(get_user_data_by_session(req.body.session_id));
   if (!source || !destination) {
     res.send({
       code: "400",
@@ -500,42 +499,42 @@ router.post("/get-user-data-by-email", function(req, res, next) {
   });
 });
 
-router.post("/booking_history", function(req, res, next){
-  username = req.body.username;
-  source = req.body.src;
-  destination = req.body.dest;
-  mode = req.body.mode;
-  mode_company = req.body.mode_company;
-  mode_fare = req.body.mode_fare;
-  mode_number = req.body.mode_number;
-  mode_id = req.body.mode_id;
-  date_of_travel = req.body.date_of_travel;
-
-  booking_history_data = [
-                          {username: username,
-                          src: source,
-                          dest: destination,
-                          mode: mode,
-                          mode_company: mode_company,
-                          mode_fare: mode_fare,
-                          mode_number: mode_number,
-                          mode_id: mode_id,
-                          date_of_travel: date_of_travel}
-                          ]
-
-  Booking_History.insertMany(booking_history_data);
-  Booking_History.find({}, {_id: 1}, function(err, data){
-
-    if(data){
+router.post("/api/book-ticket", function(req, res, next) {
+  let booking_info = new Booking_History({
+    username: req.body.username,
+    src: req.body.src,
+    dest: req.body.dest,
+    mode: req.body.mode,
+    mode_company: req.body.mode_company,
+    mode_fare: req.body.mode_fare,
+    mode_number: req.body.mode_number,
+    mode_id: req.body.mode_id,
+    date_of_travel: ""+req.body.date_of_travel
+  });
+  booking_info.save(function(err, data) {
+    if (err) throw err;
+    else {
+      console.log(data);
       res.send({
         code: 200,
-        booking_id: data
-      })
+        booking_id: data["_id"],
+        message: "Booking done for request"
+      });
     }
-    else if(err){
-      console.log("Error while sending data: "+ err)
-    }
-  })
+  });
+});
+
+router.post("/api/get-booking-by-id", function(req, res, next) {
+  var ObjectId = require("mongodb").ObjectId;
+  let booking_id = new ObjectId(req.body.booking_id);
+  Booking_History.find({ _id: booking_id }, function(err, data) {
+    if (err) throw err;
+    res.send({
+      code: 200,
+      data: data,
+      message: "Booking done for request"
+    });
+  });
 });
 
 
