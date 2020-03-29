@@ -513,8 +513,8 @@ router.post("/booking_history", function(req, res, next){
 
   booking_history_data = [
                           {username: username,
-                          source: source,
-                          destination: destination,
+                          src: source,
+                          dest: destination,
                           mode: mode,
                           mode_company: mode_company,
                           mode_fare: mode_fare,
