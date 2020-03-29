@@ -5,9 +5,8 @@ var TwoFactorAuth = require("../models/twofactor");
 var UserSession = require("../models/usersession");
 var SearchHit = require("../models/search");
 var Places = require("../models/places");
-
 var Tourism = require ("../models/tourism_data");
-
+var Booking_History = require("../models/booking_history")
 var nodemailer = require("nodemailer");
 const fetch = require("node-fetch");
 const uuidv1 = require("uuid/v1");
@@ -271,65 +270,273 @@ router.post("/user-search-history", function(req, res, next) {
   });
 });
 
-// travel_mode API
-
-var array=[]
-for (var i=350, t=355; i<t; i++) {
-  array.push(Math.floor(Math.random()*t))
+function generate_mode_number() {
+  const upperCaseAlp = [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "I",
+    "J",
+    "K",
+    "L",
+    "M",
+    "N",
+    "O",
+    "P",
+    "Q",
+    "R",
+    "S",
+    "T",
+    "U",
+    "V",
+    "W",
+    "X",
+    "Y",
+    "Z"
+  ];
+  const numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+  let number =
+    upperCaseAlp[Math.floor(Math.random() * (upperCaseAlp.length - 0) + 0)] +
+    "" +
+    upperCaseAlp[Math.floor(Math.random() * (upperCaseAlp.length - 0) + 0)] +
+    "" +
+    upperCaseAlp[Math.floor(Math.random() * (upperCaseAlp.length - 0) + 0)] +
+    "-" +
+    numbers[Math.floor(Math.random() * (numbers.length - 0) + 0)] +
+    "" +
+    numbers[Math.floor(Math.random() * (numbers.length - 0) + 0)] +
+    "" +
+    numbers[Math.floor(Math.random() * (numbers.length - 0) + 0)];
+  return number;
 }
 
-source = "NS"
-destination = "NS"
-
-router.post("/modes", function(req, res, next){
-  
-  if(source == destination){
-
-    bus_price = array[0]
-    
-    response_object = res.send({
-          code: "200",
-          travel_mode: "Bus",
-          travel_price: bus_price
-        })
-  }      
-    // console.log(response_object)
-
-  else if(source != destination){
-
-    bus_price = array[0]
-    plane_price = bus_price*2.5
-
-    res.send({
-      code: "200",
-      travel_mode: "Plane",
-      travel_price: plane_price
-    })
+function get_company(mode) {
+  let flight_companies = [
+    "Jet Airways",
+    "Air Canada",
+    "United Airles",
+    "Air India"
+  ];
+  let bus_companies = [
+    "Greyhound Canada",
+    "Autobus Maheux Service",
+    "Coach Canada",
+    "DRL Coachlines Service"
+  ];
+  if (mode == "bus") {
+    return bus_companies[
+      Math.floor(Math.random() * (bus_companies.length - 0) + 0)
+    ];
+  } else {
+    return flight_companies[
+      Math.floor(Math.random() * (flight_companies.length - 0) + 0)
+    ];
   }
+}
 
-  else {
-    console.log("Error")
-  }  
-})
+router.post("/modes", function(req, res, next) {
+  var source = req.body.src;
+  var destination = req.body.dest;
+  console.log(get_user_data_by_session(req.body.session_id));
+  if (!source || !destination) {
+    res.send({
+      code: "400",
+      data: [],
+      message: "Bad Request"
+    });
+  } else {
+    t = 355;
 
-
-
-router.post("/fetchAll", function(req, res, next){
-  // console.log("REACHED!");
-
-  Tourism.find({}, {"_id":0}, function(err, data){
-    if (data){
-      console.log(data)
-      status_code="{code: '200'}"
-      res.send(status_code+",\n"+data)
+    let bus_options = Math.floor(Math.random() * (4 - 1) + 1);
+    let modes_data = [];
+    if (source == destination) {
+      for (var i = 1; i <= bus_options; i++) {
+        // Bus fare ranging from 50$ to 100$
+        let bus_fare = Math.floor(Math.random() * (100 - 50) + 50);
+        modes_data.push({
+          mode_number: generate_mode_number(),
+          mode: "bus",
+          mode_company: get_company("bus"),
+          currency: "$",
+          mode_fare: bus_fare + ".00",
+          mode_id: "bus_" + i
+        });
+      }
+      res.send({
+        code: "200",
+        message: "Travel options",
+        data: modes_data
+      });
+    } else if (source != destination) {
+      let flight_options = Math.floor(Math.random() * (4 - 1) + 1);
+      for (var i = 1; i <= bus_options; i++) {
+        // Bus fare ranging from 50$ to 100$
+        let bus_fare = Math.floor(Math.random() * (100 - 50) + 50);
+        modes_data.push({
+          mode_number: generate_mode_number(),
+          mode: "bus",
+          mode_company: get_company("bus"),
+          currency: "$",
+          mode_fare: bus_fare + ".00",
+          mode_id: "bus_" + i
+        });
+      }
+      for (var i = 1; i <= flight_options; i++) {
+        let bus_fare = Math.floor(Math.random() * (100 - 50) + 50);
+        bus_fare = Math.floor(bus_fare * 2.5);
+        modes_data.push({
+          mode_number: generate_mode_number(),
+          mode: "flight",
+          mode_company: get_company("flight"),
+          currency: "$",
+          mode_fare: bus_fare + ".00",
+          mode_id: "flight_" + i
+        });
+      }
+      res.send({
+        code: "200",
+        message: "Travel options",
+        data: modes_data
+      });
+    } else {
+      res.send({
+        code: "400",
+        data: [],
+        message: "Bad Request; Issue with source or destination"
+      });
     }
-    else if (err){
-      console.log("Error while fetching the data: "+err)
+  }
+});
+
+router.post("/get-all-provinces", function(req, res, next) {
+  Provinces.find({}, { _id: 0 }, function(err, data) {
+    if (data) {
+      res.send({
+        code: 200,
+        data: data,
+        message: "All the provinces in Canada"
+      });
+    } else if (err) {
+      console.log("Error while fetching the data: " + err);
     }
-    else {
-      console.log("Invalid Request!")
+  });
+});
+
+router.post("/get-user-info-by-session", function(req, res, next) {
+  UserSession.findOne({ session_id: req.body.session_id }, function(err, data) {
+    if (err) {
+      console.log("get_user_data_by_session err1: ", err);
+      return null;
+    } else {
+      console.log("Session: ", data);
+      User.findOne({ email: data.email }, function(err, user_data) {
+        if (err) {
+          console.log("get_user_data_by_mail err1: ", err);
+          return null;
+        } else {
+          let user_info = JSON.parse(JSON.stringify(user_data));
+          delete user_info["password"];
+          console.log("User data in session:", user_info);
+          res.send({
+            code: 200,
+            data: user_info,
+            message: "User data from session fetched successfully!"
+          });
+        }
+      });
+    }
+  });
+});
+
+router.post("/get-province-by-id", function(req, res, next) {
+  Provinces.findOne({ p_id: id }, function(err, data) {
+    if (err) {
+      return null;
+    } else {
+      console.log(data);
+      res.send({
+        code: 200,
+        data: data,
+        message: "Province data fetched successfully!"
+      });
+    }
+  });
+});
+
+router.post("/get-place-by-id", function(req, res, next) {
+  Places.findOne({ place_id: id }, function(err, data) {
+    if (err) {
+      console.log("err: ", err);
+      return null;
+    } else {
+      console.log(data);
+      res.send({
+        code: 200,
+        data: data,
+        message: "Place data fetched successfully!"
+      });
+    }
+  });
+});
+
+router.post("/get-user-data-by-email", function(req, res, next) {
+  User.findOne({ email: mail_id }, function(err, data) {
+    if (err) {
+      console.log("get_user_data_by_mail err1: ", err);
+      return null;
+    } else {
+      console.log("User data:", data);
+      res.send({
+        code: 200,
+        data: data,
+        message: "User data by email fetched successfully!"
+      });
+    }
+  });
+});
+
+router.post("/booking_history", function(req, res, next){
+  username = req.body.username;
+  source = req.body.src;
+  destination = req.body.dest;
+  mode = req.body.mode;
+  mode_company = req.body.mode_company;
+  mode_fare = req.body.mode_fare;
+  mode_number = req.body.mode_number;
+  mode_id = req.body.mode_id;
+  date_of_travel = req.body.date_of_travel;
+
+  booking_history_data = [
+                          {username: username,
+                          source: source,
+                          destination: destination,
+                          mode: mode,
+                          mode_company: mode_company,
+                          mode_fare: mode_fare,
+                          mode_number: mode_number,
+                          mode_id: mode_id,
+                          date_of_travel: date_of_travel}
+                          ]
+
+  Booking_History.insertMany(booking_history_data);
+  Booking_History.find({}, {_id: 1}, function(err, data){
+
+    if(data){
+      res.send({
+        code: 200,
+        booking_id: data
+      })
+    }
+    else if(err){
+      console.log("Error while sending data: "+ err)
     }
   })
-})
+});
+
 
 module.exports = router;
