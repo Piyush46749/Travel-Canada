@@ -36,6 +36,21 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 // app.use(express.static(__dirname + '/views'));
+app.all('/api/*', function (req, res, next) {
+  console.log('Accessing the secret section ...')
+  // let session_id = req.get("session_id");
+  // UserSession.findOne({ session_id: session_id }, function(err, data) {
+  //   if (err) {
+  //     console.log("get_user_data_by_session err1: ", err);
+  //     res.send({code:403, message: "Not Authorized to access this resource."});
+  //   } else {
+  //     console.log("Session: ", data);
+  //     next() // pass control to the next handler
+  //   }
+  // });
+  next()
+  
+})
 
 var index = require("./routes/index");
 app.use("/", index);
