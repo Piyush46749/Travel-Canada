@@ -8,10 +8,14 @@ var session = require("express-session");
 var MongoStore = require("connect-mongo")(session);
 var cors = require("cors");
 
+var MongoClient = require('mongodb').MongoClient,
+f = require('util').format,
+fs = require('fs');
 app.use(cors());
+
+
 mongoose.connect(
-  "mongodb://54.152.237.11:27017/Tourism_DB",
-  { useMongoClient: true }
+  '<enter your connection string>' //the string that will be used to connect to database that is hosted globally
 );
 
 var db = mongoose.connection;
