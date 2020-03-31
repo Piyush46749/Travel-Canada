@@ -538,4 +538,30 @@ router.post("/api/get-booking-by-id", function(req, res, next) {
 });
 
 
+//get the trending places from database(places frequently booked by users)
+
+router.post("/hotspots", function(req, res, next){
+
+  Booking_History.aggregate([
+    {"$group" : 
+    {_id:{destination:"$Halifax"}, count:{$sum:1}}
+    }, 
+    {$sort:{"count":-1}}
+                            ], 
+    function(err, data){
+      if(data){
+
+      console.log(data);
+
+      }
+
+      else if(err){
+
+    console.log("Error Occured"+err)
+
+      }
+});
+
+})
+
 module.exports = router;
