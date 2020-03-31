@@ -540,28 +540,30 @@ router.post("/api/get-booking-by-id", function(req, res, next) {
 
 //get the trending places from database(places frequently booked by users)
 
-router.post("/hotspots", function(req, res, next){
-
-  Booking_History.aggregate([
-    {"$group" : 
-    {_id:{destination:"$Halifax"}, count:{$sum:1}}
-    }, 
-    {$sort:{"count":-1}}
-                            ], 
-    function(err, data){
-      if(data){
-
-      console.log(data);
-
-      }
-
-      else if(err){
-
-    console.log("Error Occured"+err)
-
-      }
+router.post("/get-hotspots", function(req, res, next) {
+  Booking_History.aggregate([ {"$group" : {_id:"$dest", count:{$sum:1}}}, {$sort: {"count":-1}} ], function(err, grpbydata) {
+    console.log(err);
+    console.log(grpbydata);
+    let res_data = [];
+    for(let i = 0; i < 6; i++) {
+      Places.findOne({ place_id: grpbydata[i]['_id'] }, function(err, data) {
+        if (err) {
+          console.log("err: ", err);
+          return null;
+        } else {
+          console.log(data);
+          res_data.push(data);
+          if(i == 5) {
+            res.send({
+              code: 200,
+              data: res_data,
+              message: "Booking done for request"
+            });
+          }
+        }
+      });
+    }
+  });
 });
-
-})
 
 module.exports = router;
