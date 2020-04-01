@@ -10,6 +10,8 @@ var Booking_History = require("../models/booking_history")
 var nodemailer = require("nodemailer");
 const fetch = require("node-fetch");
 const uuidv1 = require("uuid/v1");
+const PDFDocument = require("pdfkit");
+const fs = require ("fs")
 
 router.post("/register", function(req, res, next) {
   console.log(req.body);
@@ -499,7 +501,7 @@ router.post("/get-user-data-by-email", function(req, res, next) {
   });
 });
 
-router.post("/api/book-ticket", function(req, res, next) {
+router.post("/book-ticket", function(req, res, next) {
   let booking_info = new Booking_History({
     username: req.body.username,
     src: req.body.src,
@@ -524,7 +526,7 @@ router.post("/api/book-ticket", function(req, res, next) {
   });
 });
 
-router.post("/api/get-booking-by-id", function(req, res, next) {
+router.post("/get-booking-by-id", function(req, res, next) {
   var ObjectId = require("mongodb").ObjectId;
   let booking_id = new ObjectId(req.body.booking_id);
   Booking_History.find({ _id: booking_id }, function(err, data) {
@@ -564,6 +566,62 @@ router.post("/get-hotspots", function(req, res, next) {
       });
     }
   });
+});
+
+//API for ticket generation in pdf form
+
+router.post("/api/ticket_generation", function(req, res, next){
+  console.log("Reached")
+
+  var ref = "123456789"
+  var mode = "Flight"
+  var p_name = "Piyush"
+  var src = "NB"
+  var dest = "KTCHN"
+  var j_date = "March 31, 2020"
+  var fare = "$180.0"
+  var flight_name = "West Jet"
+  var flight_number = "(ROX - 218)"
+
+  var doc = new PDFDocument;
+  doc.pipe(fs.createWriteStream("ticket.pdf"));
+doc.fontSize(14)
+  .text('Your Booking Is Confirmed', 200, 90)
+  .text("Your booking reference number is: "+ref, 130, 120)
+
+doc.fontSize(9)
+  .text("Passenger Name: "+p_name, 220, 240)
+  .text("Source: "+src, 220, 260)
+  .text("Destination: "+dest, 220, 280)
+  .text("Journey Date: "+j_date, 220, 300)
+  .text("Mode: "+mode, 220, 320)
+  .text("Fare: "+fare, 220, 340)
+
+doc.fontSize(9)
+  .text(flight_name, 155, 295)
+  .text(flight_number, 150, 305)
+
+  doc.image('C:\\Users\\Piyush\\Desktop\\travel-app-api\\images\\confirmed.png', 210, 150, {width: 170, height: 70}
+  // fit: [100, 100],
+  );
+
+  if (mode == "Flight")  {
+  doc.image('C:\\Users\\Piyush\\Desktop\\travel-app-api\\images\\flight.png', 150, 240, {width: 50, height: 50})
+  // fit: [10, 10]
+  }
+
+  else if (mode == "Bus") {
+  doc.image('C:\\Users\\Piyush\\Desktop\\travel-app-api\\images\\bus.png', 150, 240, {width: 50, height: 50})
+  // fit: [100, 100]
+  }
+
+  else {
+    console.log("No valid mode!")
+  }
+
+  doc.end();
+  res.send("OK")
+
 });
 
 module.exports = router;
